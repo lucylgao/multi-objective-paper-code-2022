@@ -17,7 +17,7 @@ dp = [dp1(:) dp2(:)];
 % Saving z(x, thetastar) and z(x, thetastar)*z(x, thetastar)'
 % for each x in design points for the linear model 
 % y ~ 1 + x1 + x2 + x1x2 + x2^2 
-all_z_vectors = [dp dp(:, 1).*dp(:, 2) dp(:, 2).^2];
+all_z_vectors = [ones(N, 1) dp dp(:, 1).*dp(:, 2) dp(:, 2).^2];
 all_z_outer_prods = bsxfun(@times, all_z_vectors', permute(all_z_vectors, [3 1 2]));
 
 num_params = size(all_z_vectors, 2);
@@ -69,7 +69,7 @@ E_opt_design=[dp(find(E_opt_weights>tol), :) E_opt_weights(find(E_opt_weights>to
 E_opt_obj = cvx_optval;
 
 %%% Compute the c-optimal design for the linear model (Phi3) %%
-c=[0 0 0 1]'
+c=[0 0 0 1 0]'
 
 cvx_begin
     cvx_precision high
