@@ -129,7 +129,7 @@ I_opt_obj = cvx_optval;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %           EFFICIENCY CONSTRAINTS SET-UP          %        
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-[min_D_eff, min_I_eff] = deal(0.7, 0.7);
+[min_D_eff, min_I_eff] = deal(0.9, 0.8);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %           COMPUTE EFFICIENCY CONSTRAINED         %
