@@ -219,14 +219,18 @@ resulttime=cputime-runningtime
 %                   MAKE PLOTS                     %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+set(groot,'defaultLineLineWidth',1.2)
+
 % FIGURE 1
+% Set the export setup to have width of 12 inches and height of 6 inches 
+
 tiledlayout(1,4)
 zero_line = zeros(N, 1);
 
 ax1=nexttile;
 plot(design_points,d1_vect,design_points,zero_line,'r--')
 title(ax1,'(a) $\phi_1$-optimality', 'Interpreter', 'latex', ...
-        'FontSize', 20)
+        'FontSize', 17)
 xlabel('$u_i$', 'Interpreter', 'latex', ...
         'FontSize', 20)
 ylabel('$d_{\phi_1, f}(u_i, {\bf w}^{*m}$)', 'Interpreter', 'latex', ...
@@ -235,36 +239,30 @@ ylabel('$d_{\phi_1, f}(u_i, {\bf w}^{*m}$)', 'Interpreter', 'latex', ...
 ax2=nexttile;
 plot(design_points,d2_vect,design_points,zero_line,'r--')
 title(ax2,'(b) $\phi_2$-optimality', 'Interpreter', 'latex', ...
-        'FontSize', 20)
+        'FontSize', 17)
 xlabel('$u_i$', 'Interpreter', 'latex', ...
         'FontSize', 20)
 ylabel('$d_{\phi_2, f}(u_i, {\bf w}^{*m}$)', 'Interpreter', 'latex', ...
-        'FontSize', 15)
+        'FontSize', 20)
     
 ax3=nexttile;
 plot(design_points,d3_vect,design_points,zero_line,'r--')
 title(ax3,'(c) $\phi_3$-optimality', 'Interpreter', 'latex', ...
-        'FontSize', 20)
+        'FontSize', 17)
 xlabel('$u_i$', 'Interpreter', 'latex', ...
-        'FontSize', 15)
+        'FontSize', 20)
 ylabel('$d_{\phi_3, f}(u_i, {\bf w}^{*m}$)', 'Interpreter', 'latex', ...
-        'FontSize', 15)
+        'FontSize', 20)
     
 ax4=nexttile;
 plot(design_points,d_constr_vect,design_points,zero_line,'r--')
 title(ax4,'(d) Multi-objective optimality', 'Interpreter', 'latex', ...
-        'FontSize', 15)
+        'FontSize', 17)
 xlabel('$u_i$', 'Interpreter', 'latex', ...
-        'FontSize', 15)
-ylabel('$d_1(u_i, {\bf w}^{*m}) + \eta_2d_1(u_i, {\bf w}^{*m}) + \eta_3 d_3(u_i, {\bf w}^{*m})$', ...
+        'FontSize', 20)
+ylabel('$d_1(u_i, {\bf w}^{*m}) + \sum_{k=2}^3  \eta_k d_k(u_i, {\bf w}^{*m})$', ...
         'Interpreter','latex','FontSize',15)
 
-fig.Units               = 'inches';
-fig.Position(3)         = 12;
-fig.Position(4)         = 4;
+set(gca,'LooseInset', max(get(gca,'TightInset'), 0.01))
 
-set(gca,'LooseInset', max(get(gca,'TightInset'), 0.02))
-
-fig.PaperPositionMode   = 'auto';
-
-print('fig1', '-dpng', '-r600')
+print('fig1', '-dpng', '-r1000')

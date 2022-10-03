@@ -249,7 +249,10 @@ resulttime=cputime-runningtime
 %                   MAKE PLOTS                     %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+set(groot,'defaultLineLineWidth',1.2)
+
 % FIGURE 2
+% Set the export setup to have width of 12 inches and height of 6 inches 
 tiledlayout(2,3)
 zero_line = zeros(N, 1);
 
@@ -271,7 +274,7 @@ title(ax2,'(b) $\phi_2$-optimality', 'Interpreter', 'latex', ...
 xlabel('$u_i$', 'Interpreter', 'latex', ...
         'FontSize', 20)
 ylabel('$d_{\phi_2, f_2}(u_i, {\bf w}^{*mm}$)', 'Interpreter', 'latex', ...
-        'FontSize', 15)
+        'FontSize', 20)
     
 ax3=nexttile;
 plot(design_points,d3_vect,design_points,zero_line,'r--')
@@ -279,9 +282,9 @@ xlim([0 500])
 title(ax3,'(c) $\phi_3$-optimality', 'Interpreter', 'latex', ...
         'FontSize', 20)
 xlabel('$u_i$', 'Interpreter', 'latex', ...
-        'FontSize', 15)
+        'FontSize', 20)
 ylabel('$d_{\phi_3, f_3}(u_i, {\bf w}^{*mm}$)', 'Interpreter', 'latex', ...
-        'FontSize', 15)
+        'FontSize', 20)
 
 ax4=nexttile;
 plot(design_points,d4_vect,design_points,zero_line,'r--')
@@ -289,26 +292,21 @@ xlim([0 500])
 title(ax4,'(d) $\phi_4$-optimality', 'Interpreter', 'latex', ...
         'FontSize', 20)
 xlabel('$u_i$', 'Interpreter', 'latex', ...
-        'FontSize', 15)
+        'FontSize', 20)
 ylabel('$d_{\phi_4, f_4}(u_i, {\bf w}^{*mm}$)', 'Interpreter', 'latex', ...
-        'FontSize', 15)
+        'FontSize', 20)
     
 ax5=nexttile;
 plot(design_points,d_maximin_vect,design_points,zero_line,'r--')
 xlim([0 500])
 title(ax5,'(e) Multi-objective optimality', 'Interpreter', 'latex', ...
-        'FontSize', 15)
+        'FontSize', 20)
 xlabel('$u_i$', 'Interpreter', 'latex', ...
-        'FontSize', 15)
+        'FontSize', 20)
 ylabel('$\sum_{k=1}^4 \eta_k d_{\phi_k, f_k}(u_i, {\bf w}^{*mm})$', ...
         'Interpreter','latex','FontSize',15)
 
-fig.Units               = 'inches';
-fig.Position(3)         = 12;
-fig.Position(4)         = 6;
 
-set(gca,'LooseInset', max(get(gca,'TightInset'), 0.02))
+set(gca,'LooseInset', max(get(gca,'TightInset'), 0.01))
 
-fig.PaperPositionMode   = 'auto';
-
-print('fig2', '-dpng', '-r600')
+print('fig2', '-dpng', '-r1000')
