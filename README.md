@@ -4,7 +4,7 @@ Code to reproduce all numerical results in "Necessary and sufficient conditions 
 
 ## Required software 
 
-To run the code in this repository, you will need to install (CVX)[http://cvxr.com/cvx/], the (MATLAB Optimization Toolbox)[https://www.mathworks.com/products/optimization.html], and the (MATLAB Symbolic Math Toolbox)[https://www.mathworks.com/products/symbolic.html].  
+To run the code in this repository, you will need to install [CVX](http://cvxr.com/cvx/), the [MATLAB Optimization Toolbox](https://www.mathworks.com/products/optimization.html), and the [MATLAB Symbolic Math Toolbox](https://www.mathworks.com/products/symbolic.html).  
 
 ## Organization 
 
