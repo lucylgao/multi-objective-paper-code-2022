@@ -219,50 +219,66 @@ resulttime=cputime-runningtime
 %                   MAKE PLOTS                     %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-set(groot,'defaultLineLineWidth',1.2)
-
-% FIGURE 1
-% Set the export setup to have width of 12 inches and height of 6 inches 
-
-tiledlayout(1,4)
+%% FIGURE 1
+tiledlayout(1,4,'TileSpacing','compact', 'Padding','compact')
 zero_line = zeros(N, 1);
 
 ax1=nexttile;
-plot(design_points,d1_vect,design_points,zero_line,'r--')
+plot(design_points,d1_vect,design_points,zero_line,'r--','LineWidth',1)
+ax1.FontSize = 8;
+ax1.LineWidth = 1;
 title(ax1,'(a) $\phi_1$-optimality', 'Interpreter', 'latex', ...
-        'FontSize', 17)
+        'FontSize', 9)
 xlabel('$u_i$', 'Interpreter', 'latex', ...
-        'FontSize', 20)
+        'FontSize', 10)
 ylabel('$d_{\phi_1, f}(u_i, {\bf w}^{*m}$)', 'Interpreter', 'latex', ...
-        'FontSize', 20)
-    
+        'FontSize', 9)
+
 ax2=nexttile;
-plot(design_points,d2_vect,design_points,zero_line,'r--')
+plot(design_points,d2_vect,design_points,zero_line,'r--','LineWidth',1)
+ax2.FontSize = 8;
+ax2.LineWidth = 1;
 title(ax2,'(b) $\phi_2$-optimality', 'Interpreter', 'latex', ...
-        'FontSize', 17)
+        'FontSize', 9)
 xlabel('$u_i$', 'Interpreter', 'latex', ...
-        'FontSize', 20)
+        'FontSize', 10)
 ylabel('$d_{\phi_2, f}(u_i, {\bf w}^{*m}$)', 'Interpreter', 'latex', ...
-        'FontSize', 20)
+        'FontSize', 9)
     
 ax3=nexttile;
-plot(design_points,d3_vect,design_points,zero_line,'r--')
+plot(design_points,d3_vect,design_points,zero_line,'r--','LineWidth',1)
+ax3.FontSize = 8;
+ax3.LineWidth = 1;
 title(ax3,'(c) $\phi_3$-optimality', 'Interpreter', 'latex', ...
-        'FontSize', 17)
+        'FontSize', 9)
 xlabel('$u_i$', 'Interpreter', 'latex', ...
-        'FontSize', 20)
+        'FontSize', 10)
 ylabel('$d_{\phi_3, f}(u_i, {\bf w}^{*m}$)', 'Interpreter', 'latex', ...
-        'FontSize', 20)
+        'FontSize', 9)
     
 ax4=nexttile;
-plot(design_points,d_constr_vect,design_points,zero_line,'r--')
-title(ax4,'(d) Multi-objective optimality', 'Interpreter', 'latex', ...
-        'FontSize', 17)
+plot(design_points,d_constr_vect,design_points,zero_line,'r--','LineWidth',1)
+ax4.FontSize = 8;
+ax4.LineWidth = 1;
+title(ax4,{['(d) Multi-objective'], ['optimality']}, 'Interpreter', 'latex', ...
+        'FontSize', 9)
 xlabel('$u_i$', 'Interpreter', 'latex', ...
-        'FontSize', 20)
-ylabel('$d_1(u_i, {\bf w}^{*m}) + \sum_{k=2}^3  \eta_k d_k(u_i, {\bf w}^{*m})$', ...
-        'Interpreter','latex','FontSize',15)
+        'FontSize', 10)
+ylabel('$d_1(u_i, {\bf w}^{*m}) + \sum \limits_{k=2}^3 \eta_k^* d_k(u_i, {\bf w}^{*m})$', ...
+        'Interpreter','latex','FontSize',9)
+limsy=get(gca,'YLim');
+ylim([limsy(1) 10])
 
-set(gca,'LooseInset', max(get(gca,'TightInset'), 0.01))
+h = gcf;
+set(h, 'PaperUnits','centimeters');
+set(h, 'Units','centimeters');
 
-print('fig1', '-dpng', '-r1000')
+pos=get(h,'Position');
+set(h, 'Position', [pos(1),pos(2), 17, 5]);
+
+pos=get(h,'Position');
+set(h, 'PaperSize', [pos(3) pos(4)]);
+set(h, 'PaperPositionMode', 'manual');
+set(h, 'PaperPosition',[0 0 pos(3) pos(4)]);
+
+print('Figure1', '-dpdf')
