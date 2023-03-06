@@ -70,7 +70,10 @@ cvx_begin
             D_opt_weights(j)*squeeze(all_z_outer_prods(:, j, :));
     end
     
-    minimize ( -log_det(information_mat))   
+    % Here, we reformulate problem as minimizing 
+    % -det_rootn(information_mat) to avoid successive approximation; 
+    % see CVX User's Guide for details
+    minimize ( -det_rootn(information_mat))   
 
     0 <= D_opt_weights <= 1;
     sum(D_opt_weights) == 1;
@@ -78,7 +81,7 @@ cvx_end
 
 D_opt_design=[design_points(find(D_opt_weights>tol))' ...
               D_opt_weights(find(D_opt_weights>tol))]'
-D_opt_obj = cvx_optval;
+D_opt_obj = -log(det(information_mat));
 
 
 %%% Compute the I-optimal design for the model (Phi3) %%%
@@ -110,21 +113,30 @@ cvx_begin
     cvx_precision high
     variable I_opt_weights(N)
     expression information_mat(num_params, num_params)
+    expression A(num_params, num_params)
+
     
     for j = 1:N 
         information_mat = information_mat + ...
             I_opt_weights(j)*squeeze(all_z_outer_prods(:, j, :));
     end
+    
+    A = L_Phi2_inv'*information_mat*L_Phi2_inv;
+    % Matrix is not quite symmetric due to round off errors, 
+    % so we explicitly symmetrize to fix
+    A = 0.5*(A + A');
 
-    minimize trace_inv(L_Phi2_inv*information_mat*L_Phi2_inv)   
+    minimize trace_inv(A)   
+    %minimize trace_inv(L_Phi2_inv*information_mat*L_Phi2_inv)
     0 <= I_opt_weights <= 1;
-    sum(I_opt_weights) == 1;
+    sum(I_opt_weights) == 1; 
+    %A = 0.5*(A + A');
+
 cvx_end
 
 I_opt_design=[design_points(find(I_opt_weights>tol))' ...
               I_opt_weights(find(I_opt_weights>tol))]'
 I_opt_obj = cvx_optval;
-
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %           EFFICIENCY CONSTRAINTS SET-UP          %        
@@ -135,26 +147,39 @@ I_opt_obj = cvx_optval;
 %           COMPUTE EFFICIENCY CONSTRAINED         %
 %                  OPTIMAL DESIGN                  %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 cvx_begin 
     cvx_precision high
     variable constrained_opt_weights(N) 
     expression information_mat(num_params, num_params)
+    expression A(num_params, num_params)
     
     for j = 1:N 
         information_mat = information_mat + ...
             constrained_opt_weights(j)*squeeze(all_z_outer_prods(:, j, :));
     end
+    
+    A = L_Phi2_inv*information_mat*L_Phi2_inv; 
+    % Again, matrix is not quite symmetric due to round off errors, 
+    % so we explicitly symmetrize to fix
+    A = 0.5*(A + A');
 
     minimize trace_inv(L_Phi1_inv*information_mat*L_Phi1_inv) 
     0 <= constrained_opt_weights <= 1;
     sum(constrained_opt_weights) == 1;
-    -log_det(information_mat) <= D_opt_obj - num_params*log(min_D_eff);
-    trace_inv(L_Phi2_inv*information_mat*L_Phi2_inv) <= I_opt_obj/min_I_eff;
+    %-log_det(information_mat) <= D_opt_obj - num_params*log(min_D_eff);
+    % Again, we have reformulated constraint to involve
+    % -det_rootn(information_mat) to avoid successive approximation; 
+    % see CVX User's Guide for details
+    -det_rootn(information_mat) <= -exp(-D_opt_obj/num_params + log(min_D_eff));
+    trace_inv(A) <= I_opt_obj/min_I_eff;
 cvx_end
 
 constrained_opt_design = ... 
     [design_points(find(constrained_opt_weights>tol))' ...
               constrained_opt_weights(find(constrained_opt_weights>tol))]'
+
+opt_time = cputime - runningtime
 
 % Cheng and Yang (2019) report Phi_1-efficiency = 0.8692, 
 % Phi_2-efficiency = 0.9000, and Phi_3-efficiency = 0.8001 
@@ -175,6 +200,8 @@ Phi3_efficiency = I_opt_obj/trace(inv((L_Phi2_inv*information_mat*L_Phi2_inv)))
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Set relaxation parameter for the inequality
 tol_lp = 1e-4; 
+
+runningtime = cputime;
 
 % Find Lagrange multipliers using linear programming
 d1_vect=zeros(N,1);
@@ -207,13 +234,15 @@ eta = linprog(ones(2, 1), ...
     [B_ineq' B_eq -B_eq]', [b' tol_lp*ones(1, 4)]', ...
     [], [], zeros(2, 1), [])
 
+linprogtime=cputime-runningtime
+
 d_constr_vect = d1_vect + eta(1)*d2_vect + eta(2)*d3_vect;
 
 max(d_constr_vect) % should be around tol_lp
 
 abs(max(d_constr_vect) - tol_lp) % Should be very very small 
 
-resulttime=cputime-runningtime
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %                   MAKE PLOTS                     %
@@ -255,9 +284,11 @@ xlabel('$u_i$', 'Interpreter', 'latex', ...
         'FontSize', 10)
 ylabel('$d_{\phi_3, f}(u_i, {\bf w}^{*m}$)', 'Interpreter', 'latex', ...
         'FontSize', 9)
-    
+
+delta_line = tol_lp*ones(N, 1);
+
 ax4=nexttile;
-plot(design_points,d_constr_vect,design_points,zero_line,'r--','LineWidth',1)
+plot(design_points,d_constr_vect,design_points,delta_line,'r--','LineWidth',1)
 ax4.FontSize = 8;
 ax4.LineWidth = 1;
 title(ax4,{['(d) Multi-objective'], ['optimality']}, 'Interpreter', 'latex', ...

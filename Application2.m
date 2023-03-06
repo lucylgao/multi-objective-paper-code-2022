@@ -4,9 +4,9 @@ runningtime=cputime;  %record computation time
 %      MODEL & DESIGN SPACE SET UP                 %        
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Make design points for discrete design space: 
-% N = 201 equally spaced points in the interval S = [0, 500] 
+% N = 501 equally spaced points in the interval S = [0, 500] 
 [S_left_endpoint, S_right_endpoint] = deal(0, 500);
-N = 201; 
+N = 501; 
 design_points = linspace(S_left_endpoint,S_right_endpoint,N);
 
 % Set true parameter values for the non-linear models 
@@ -72,7 +72,11 @@ cvx_begin
             D_lin_weights(j)*squeeze(all_z_outer_prods_linear(:, j, :));
     end
     
-    minimize ( -log_det(lin_inf_mat))   
+
+    % Here, we reformulate problem as minimizing 
+    % -det_rootn(information_mat) to avoid successive approximation; 
+    % see CVX User's Guide for details    
+    minimize ( -det_rootn(lin_inf_mat))   
 
     0 <= D_lin_weights <= 1;
     sum(D_lin_weights) == 1;
@@ -80,7 +84,7 @@ cvx_end
 
 D_lin_design=[design_points(find(D_lin_weights>tol))' ...
               D_lin_weights(find(D_lin_weights>tol))]'
-D_lin_obj = cvx_optval;
+D_lin_obj = -log(det(lin_inf_mat));
 
 %%% Compute the D-optimal design for the EmaxI model (Phi2) %%%
 cvx_begin
@@ -93,7 +97,8 @@ cvx_begin
             D_EmaxI_weights(j)*squeeze(all_z_outer_prods_EmaxI(:, j, :));
     end
     
-    minimize ( -log_det(EmaxI_inf_mat))   
+    % See earier note about log_det vs. det_rootn
+    minimize ( -det_rootn(EmaxI_inf_mat))   
 
     0 <= D_EmaxI_weights <= 1;
     sum(D_EmaxI_weights) == 1;
@@ -101,7 +106,7 @@ cvx_end
 
 D_EmaxI_design=[design_points(find(D_EmaxI_weights>tol))' ...
               D_EmaxI_weights(find(D_EmaxI_weights>tol))]'
-D_EmaxI_obj = cvx_optval;
+D_EmaxI_obj = -log(det(EmaxI_inf_mat));
 
 %%% Compute the D-optimal design for the EmaxII model (Phi3) %%%
 cvx_begin
@@ -114,7 +119,8 @@ cvx_begin
             D_EmaxII_weights(j)*squeeze(all_z_outer_prods_EmaxII(:, j, :));
     end
     
-    minimize ( -log_det(EmaxII_inf_mat))   
+    % See earier note about log_det vs. det_rootn
+    minimize ( -det_rootn(EmaxII_inf_mat))   
 
     0 <= D_EmaxII_weights <= 1;
     sum(D_EmaxII_weights) == 1;
@@ -122,7 +128,7 @@ cvx_end
 
 D_EmaxII_design=[design_points(find(D_EmaxII_weights>tol))' ...
               D_EmaxII_weights(find(D_EmaxII_weights>tol))]'
-D_EmaxII_obj = cvx_optval;
+D_EmaxII_obj = -log(det(EmaxII_inf_mat));
 
 %%% Compute the D-optimal design for the logistic model (Phi4) %%%
 cvx_begin
@@ -134,8 +140,9 @@ cvx_begin
         logistic_inf_mat = logistic_inf_mat + ...
             D_logistic_weights(j)*squeeze(all_z_outer_prods_logistic(:, j, :));
     end
-    
-    minimize ( -log_det(logistic_inf_mat))   
+
+    % See earier note about log_det vs. det_rootn
+    minimize ( -det_rootn(logistic_inf_mat))   
 
     0 <= D_logistic_weights <= 1;
     sum(D_logistic_weights) == 1;
@@ -143,7 +150,7 @@ cvx_end
 
 D_logistic_design=[design_points(find(D_logistic_weights>tol))' ...
               D_logistic_weights(find(D_logistic_weights>tol))]'
-D_logistic_obj = cvx_optval;
+D_logistic_obj = -log(det(logistic_inf_mat));
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %      COMPUTE MAXIMIN OPTIMAL DESIGN              %
@@ -171,6 +178,9 @@ cvx_begin
 
     minimize t 
     
+    % Unfortunately, we can't reformulate to det_rootn to avoid successive
+    % approximation here because then we will end up with non-convex
+    % constraints involving -t*det_rootn(inf_mat)
     -log_det(lin_inf_mat) - D_lin_obj - size(lin_inf_mat, 1)*log(t) <= 0;
     -log_det(EmaxI_inf_mat) - D_EmaxI_obj - size(EmaxI_inf_mat, 1)*log(t) <= 0;
     -log_det(EmaxII_inf_mat) - D_EmaxII_obj - size(EmaxII_inf_mat, 1)*log(t) <= 0;
@@ -185,6 +195,9 @@ cvx_end
 maximin_design =[design_points(find(maximin_weights>tol))' ...
               maximin_weights(find(maximin_weights>tol))]'
 maximin_obj = cvx_optval;
+
+opt_time = cputime - runningtime
+
 
 % Calculate efficiencies at the maximin optimal design we found 
 linear_D_efficiency = (exp(D_lin_obj)^(1/2))/...
@@ -206,6 +219,8 @@ t % optimal value of t
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Set relaxation parameter for the inequality
 tol_lp = 1e-4; 
+
+runningtime=cputime;
 
 % Find Lagrange multipliers using linear programming
 d1_vect = zeros(N,1);
@@ -238,12 +253,13 @@ etas = linprog(ones(4, 1), ...
     equality_mat, 1, ... 
     zeros(4, 1), [])
 
+linprogtime=cputime-runningtime
+
 d_maximin_vect = D_mat*etas;
 
 max(d_maximin_vect) % should be around tol_lp
 abs(max(d_maximin_vect) - tol_lp) % Should be very very small 
 
-resulttime=cputime-runningtime
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %                   MAKE PLOTS                     %
@@ -303,8 +319,12 @@ ylabel('$d_{\phi_4, f_4}(u_i, {\bf w}^{*mm}$)', 'Interpreter', 'latex', ...
 set(gca,'linewidth',1.2)
 
     
+
+
+delta_line = tol_lp*ones(N, 1);
+
 ax5=nexttile;
-plot(design_points,d_maximin_vect,design_points,zero_line,'r--')
+plot(design_points,d_maximin_vect,design_points,delta_line,'r--')
 xlim([0 500])
 title(ax5,{['(e) Multi-objective optimality']}, 'Interpreter', 'latex', ...
         'FontSize', 9)

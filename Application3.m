@@ -9,7 +9,7 @@ runningtime=cputime;  %record computation time
 % x2 in [-1, 1]
 
 N1 = 201; % number of unique values for x2
-N = 201*2 % total number of design points
+N = N1*2 % total number of design points
 
 [dp1 dp2] = ndgrid([0 1], linspace(-1, 1, N1));
 dp = [dp1(:) dp2(:)];
@@ -116,6 +116,9 @@ cvx_end
 maximin_design = [dp(find(maximin_weights > tol), :) maximin_weights(find(maximin_weights > tol))]
 maximin_obj = cvx_optval; 
 
+opt_time = cputime - runningtime
+
+
 [V D] = eig(inf_mat);
 inv_information_mat = inv(inf_mat);
 
@@ -132,6 +135,9 @@ t % optimal value of t
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Set relaxation parameter for the inequality
 tol_lp = 1e-4; 
+
+runningtime=cputime;  %record computation time
+
 
 d1_vect = zeros(N,1);
 d2_vect = zeros(N,1);
@@ -157,6 +163,9 @@ etas = linprog(ones(3, 1), ...
     [D_mat' complementarity_mat' complementarity_mat']', tol_lp*ones(N+3*2, 1) , ... 
     equality_mat, 1, ... 
     zeros(3, 1), [])
+
+linprogtime = cputime - runningtime
+
 
 max(D_mat*etas) % should be around tol_lp
 abs(max(D_mat*etas) - tol_lp) % should be super small
